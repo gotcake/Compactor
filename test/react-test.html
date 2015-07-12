@@ -1,0 +1,19 @@
+<html>
+<head>
+    <script type="text/javascript" src="../bundle.closure.min.js.bak"></script>
+</head>
+<body>
+    <div id="foo"></div>
+    <script>
+        var HelloWorld = React.createClass({
+            render: function() {
+                return React.DOM.div({className:'foobar'}, 'Hello World: ' + this.props.name);
+            }
+        });
+        React.render(
+                React.createFactory(HelloWorld)({name:'Aaron'}),
+                document.getElementById('foo')
+        );
+    </script>
+</body>
+</html>

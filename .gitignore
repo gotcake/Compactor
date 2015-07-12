@@ -1,0 +1,5 @@
+.module_cache/
+node_modules/
+compactor.iml
+.idea/
+.DS_Store
