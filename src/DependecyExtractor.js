@@ -199,69 +199,6 @@ var myPlugin5 = new Plugin('closure-wrapper', { visitor: {
     }
 }});
 
-function processModulesHelper(metadata, exports, allModules, processed, file) {
-    if (!processed[file]) {
-        processed[file] = true;
-        allModules[file] = true;
-        var changed = false;
-        if (path.extname(file) === '.js') {
-            var modTime = getFileModTime(file),
-                fileData = metadata.files[file] || (metadata.files[file] = {});
-            if (isModTimeOld(modTime, fileData.lastModTime)) {
-                dependencies = [];
-                setsExportProperty = false;
-                assignedIdentifiers = {};
-                simpleAssignmentDeclarations = {};
-                hasGlobalDeclarations = false;
-                exportName = exports[file];
-                var code = babelCore.transformFileSync(file, {
-                    plugins: [
-                        {
-                            transformer: myPlugin,
-                            position: 'after'
-                        },
-                        {
-                            transformer: myPlugin2,
-                            position: 'after'
-                        },
-                        {
-                            transformer: myPlugin3,
-                            position: 'after'
-                        },
-                        {
-                            transformer: myPlugin4,
-                            position: 'after'
-                        },
-                        {
-                            transformer: myPlugin5,
-                            position: 'after'
-                        }
-                    ],
-                    optional: ["utility.inlineEnvironmentVariables"],
-                    blacklist: ["strict"]
-                }).code;
-                writeCacheFile(file, code + ';\n');
-                fileData.dependencies = dependencies;
-                fileData.lastModTime = modTime;
-                fileData.setsExportProperty = setsExportProperty;
-                dependencies = null;
-                assignedIdentifiers = null;
-                simpleAssignmentDeclarations = null;
-                changed = true;
-            }
-            var deps = fileData.dependencies;
-            for (var i = 0; i < deps.length; i++) {
-                allModules[deps[i]] = true;
-                if (processModulesHelper(metadata, exports, allModules, processed, deps[i])) {
-                    changed = true;
-                }
-            }
-        }
-        return changed;
-    } else {
-        return false;
-    }
-}
 
 
 var foo = module.exports = function(entryModule, exports) {
@@ -332,51 +269,9 @@ var foo = module.exports = function(entryModule, exports) {
     }
 };
 
-function getCachePath(absPath) {
-    var relPath = path.relative(currentWorkingDir, absPath).replace(/\.\.\//g, '__/');
-    return path.resolve(currentWorkingDir, '.module_cache', relPath);
-}
 
-function writeCacheFile(file, content) {
-    var cachePath = getCachePath(file, currentWorkingDir);
-    mkdirp.sync(path.dirname(cachePath));
-    fs.writeFileSync(cachePath, content + ';\n');
-}
 
-function readMetadata() {
-    try {
-        return JSON.parse(fs.readFileSync('.module_cache/metatdata.json')) || {};
-    } catch (e) {
-        return {};
-    }
-}
 
-function writeMetadata(data) {
-    mkdirp.sync('.module_cache');
-    fs.writeFileSync('.module_cache/metatdata.json', JSON.stringify(data));
-}
-
-function getFileModTime(file) {
-    try {
-        return fs.statSync(file).mtime.getTime();
-    } catch (e) {
-        return null;
-    }
-}
-
-function isModTimeOld(modTimeA, modTimeB) {
-    return modTimeA != null && (modTimeB == null || modTimeA > modTimeB);
-}
-
-function getObjectValuesAsSet(obj) {
-    var ret = {};
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            ret[obj[key]] = true;
-        }
-    }
-    return ret;
-}
 
 if (process.env.NODE_ENV === 'development') {
     console.log('we are develop.');
